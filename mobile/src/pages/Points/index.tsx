@@ -64,6 +64,7 @@ const Points = () => {
     useEffect(() => {
         api.get('services').then(response => {
             setServices(response.data);
+            console.log(response.data);
         })
     }, []);
 
@@ -76,7 +77,6 @@ const Points = () => {
             }
         }).then(response => {
             setPoints(response.data);
-            console.log(response.data);
         })
     }, [selectedServices])
 
@@ -163,7 +163,7 @@ const Points = () => {
                             onPress={() => { handleSelectService(service.id) }}
                             activeOpacity={0.6}
                         >
-                            <SvgUri width={42} height={42} uri={service.image} />
+                            <SvgUri width={44} height={44} uri={service.image} />
                             <Text style={styles.serviceTitle}>{service.title}</Text>
                         </TouchableOpacity>
                     ))}

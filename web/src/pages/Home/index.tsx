@@ -14,7 +14,7 @@ const Home = () => {
 
                 <main>
                     <h1>Seu marketplace maker</h1>
-                    <p>Te ajudamos a encontrar um espaço maker perto de você!</p>
+                    <p>Te ajudamos a encontrar um maker perto de você!</p>
                 
                     <Link to="/create-point">
                         <span>

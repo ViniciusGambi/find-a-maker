@@ -18,7 +18,14 @@ class PointsController {
             .distinct()
             .select('points.*');
 
-        return response.json(points);
+            const serializedPoints = points.map(point => {
+                return {
+                    ...point,
+                    image: `http://192.168.1.150:3333/uploads/${point.image}`
+                }
+            })
+
+        return response.json(serializedPoints);
     }
 
     async show(request: Request, response: Response) {
@@ -30,12 +37,17 @@ class PointsController {
             return response.status(400).json({ message: 'Point not found' });
         }
 
+        const serializedPoint = {
+                ...point,
+                image: `http://192.168.1.150:3333/uploads/${point.image}`
+        }
+
         const services = await knex('services')
             .join('point_service', 'services.id', '=', 'point_service.service_id')
             .where('point_service.point_id', id)
             .select('services.title');
 
-        return response.json({ point, services });
+        return response.json({ serializedPoint, services });
     }
 
     async create(request: Request, response: Response) {
@@ -43,6 +55,7 @@ class PointsController {
             name,
             whatsapp,
             image,
+            email,
             city,
             uf,
             latitude,
@@ -53,7 +66,8 @@ class PointsController {
         const point = {
             name,
             whatsapp,
-            image: 'https://images.unsplash.com/photo-1563520240533-66480a3916fe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=80',
+            image: request.file.filename,
+            email,
             city,
             uf,
             latitude,
@@ -64,12 +78,15 @@ class PointsController {
 
         const insertedIds = await trx('points').insert(point);
         const point_id = insertedIds[0];
-        const pointService = services.map((service_id: number) => {
-            return {
-                service_id,
-                point_id
-            }
-        });
+        const pointService = services
+            .split(',')
+            .map((services: string) => services.trim())
+            .map((service_id: number) => {
+                return {
+                    service_id,
+                    point_id
+                }
+            });
 
         await trx('point_service').insert(pointService);
         trx.commit();

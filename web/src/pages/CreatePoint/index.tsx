@@ -7,6 +7,7 @@ import { Map, TileLayer, Marker } from 'react-leaflet';
 import api from '../../services/api';
 import axios from 'axios';
 import { LeafletMouseEvent } from 'leaflet';
+import Dropzone from './../../components/Dropzone';
 
 interface Service {
     id: number,
@@ -14,11 +15,11 @@ interface Service {
     image: string
 }
 
-interface IBGEUFResponse{
+interface IBGEUFResponse {
     sigla: string;
 }
 
-interface IBGECityResponse{
+interface IBGECityResponse {
     nome: string;
 }
 
@@ -30,11 +31,13 @@ const CreatePoint = () => {
     const [cities, setCities] = useState<string[]>([]);
     const [initialPosition, setInitialPosition] = useState<[number, number]>([0, 0]);
 
-    
+
     const [selectedUf, setSelectedUf] = useState('0');
     const [selectedCity, setSelectedCity] = useState('0');
-    const [selectedPosition, setSelectedPosition] = useState<[number, number]>([0,0]);
-    
+    const [selectedPosition, setSelectedPosition] = useState<[number, number]>([0, 0]);
+    const [selectedFile, setSelectedFile] = useState<File>();
+
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -44,7 +47,7 @@ const CreatePoint = () => {
     const [selectedServices, setSelectedServices] = useState<number[]>([]);
 
     const history = useHistory();
-    
+
 
     useEffect(() => {
         navigator.geolocation.getCurrentPosition(position => {
@@ -58,16 +61,16 @@ const CreatePoint = () => {
             .then(response => {
                 setItems(response.data);
             }
-        )
+            )
     }, []);
 
     useEffect(() => {
         axios.get<IBGEUFResponse[]>('https://servicodados.ibge.gov.br/api/v1/localidades/estados')
             .then(response => {
-                const ufInitials =  response.data.map(uf => uf.sigla);
+                const ufInitials = response.data.map(uf => uf.sigla);
                 setUfs(ufInitials);
             }
-        )
+            )
     }, []);
 
     useEffect(() => {
@@ -80,65 +83,69 @@ const CreatePoint = () => {
                 const cityNames = response.data.map(city => city.nome);
                 setCities(cityNames);
             }
-        )
+            )
     }, [selectedUf]);
 
-    function handleSelectUfs(event: ChangeEvent<HTMLSelectElement>){
+    function handleSelectUfs(event: ChangeEvent<HTMLSelectElement>) {
         const selectedUf = event.target.value;
         setSelectedUf(selectedUf);
     }
 
-    function handleSelectCity(event: ChangeEvent<HTMLSelectElement>){
+    function handleSelectCity(event: ChangeEvent<HTMLSelectElement>) {
         const selectedCity = event.target.value;
         setSelectedCity(selectedCity);
     }
 
-    function handleMapClick(event: LeafletMouseEvent){
+    function handleMapClick(event: LeafletMouseEvent) {
         setSelectedPosition([
             event.latlng.lat,
             event.latlng.lng
         ]);
     }
 
-    function handleInputChange(event: ChangeEvent<HTMLInputElement>){
+    function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
         const { name, value } = event.target;
-        
+
         setFormData({
             ...formData,
             [name]: value
         })
     }
 
-    function handleSelectService(id: number){
+    function handleSelectService(id: number) {
         const alreadySelected = selectedServices.findIndex(service => service === id);
-        if (alreadySelected >= 0){
+        if (alreadySelected >= 0) {
             const filteredServices = selectedServices.filter(service => service !== id)
             setSelectedServices(filteredServices);
         } else {
-            setSelectedServices([ ...selectedServices, id]);
-        } 
+            setSelectedServices([...selectedServices, id]);
+        }
     }
 
-    async function handleSubmit(event: FormEvent){
+    async function handleSubmit(event: FormEvent) {
         event.preventDefault();
 
         const { name, email, whatsapp } = formData;
         const uf = selectedUf;
         const city = selectedCity
-        const [ latitude, longitude ] = selectedPosition;
+        const [latitude, longitude] = selectedPosition;
         const services = selectedServices;
-        
-        const data = {
-            name, 
-            email,
-            whatsapp,
-            uf,
-            city,
-            latitude,
-            longitude,
-            services
-        }
 
+        const data = new FormData();
+
+        data.append('name', name)
+        data.append('email', email)
+        data.append('whatsapp', whatsapp)
+        data.append('uf', uf)
+        data.append('city', city)
+        data.append('latitude', String(latitude))
+        data.append('longitude', String(longitude))
+        data.append('services', services.join(','));
+        
+        if (selectedFile){
+            data.append('image', selectedFile);
+        }
+        
         await api.post('points', data);
 
         alert('Ponto criado');
@@ -158,6 +165,8 @@ const CreatePoint = () => {
 
             <form onSubmit={handleSubmit}>
                 <h1>Cadastro do ponto</h1>
+
+                <Dropzone onFileUploaded={setSelectedFile} />
 
                 <fieldset>
                     <legend>
@@ -216,10 +225,10 @@ const CreatePoint = () => {
                     <div className="field-group">
                         <div className="field">
                             <label htmlFor="uf">Estado (UF)</label>
-                            <select 
+                            <select
                                 name="uf"
-                                id="uf" 
-                                value={selectedUf} 
+                                id="uf"
+                                value={selectedUf}
                                 onChange={handleSelectUfs}
                             >
                                 <option value="0">Selecione uma UF</option>
@@ -230,8 +239,8 @@ const CreatePoint = () => {
                         </div>
                         <div className="field">
                             <label htmlFor="city">Cidade</label>
-                            <select 
-                                name="city" 
+                            <select
+                                name="city"
                                 id="city"
                                 value={selectedCity}
                                 onChange={handleSelectCity}
@@ -255,13 +264,13 @@ const CreatePoint = () => {
 
                     <ul className="services-grid">
                         {services.map(service => (
-                            <li 
-                                key={service.id} 
+                            <li
+                                key={service.id}
                                 onClick={() => handleSelectService(service.id)}
                                 className={selectedServices.includes(service.id) ? 'selected' : ''}
                             >
-                                    <img src={service.image} alt={service.title} />
-                                    <span>{service.title}</span>
+                                <img src={service.image} alt={service.title} />
+                                <span>{service.title}</span>
                             </li>
                         ))}
                     </ul>
