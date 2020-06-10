@@ -3,7 +3,7 @@
 # Find a Maker
 > Helping to connect people who need makers services like 3D Print, CNC Cut etc, with people who provide those services. Project developed, inspired on Ecoleta Project, studying the Next Level Week #1
 
-<p align="center"><img src="https://raw.githubusercontent.com/ViniciusGambi/find-a-maker/master/.github/web-main-screen.gif"></p>
+<p align="center"><img src="https://github.com/ViniciusGambi/find-a-maker/blob/master/.github/web.gif?raw=true"></p>
 
 ## :rocket: Technologies
 
