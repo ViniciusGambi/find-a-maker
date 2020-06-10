@@ -13,6 +13,8 @@
 - [Expo][expo]
 - [React Native][rn]
 
-
-
-
+[nodejs]: https://nodejs.org/
+[typescript]: https://www.typescriptlang.org/
+[reactjs]: https://reactjs.org
+[expo]: https://expo.io/
+[rn]: https://facebook.github.io/react-native/
